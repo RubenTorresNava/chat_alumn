@@ -128,3 +128,44 @@ export const getConversations = async (req, res) => {
     }
 };
 
+//obtener los mensajes de una conversacion
+export const getMessages = async (req, res) => {
+    try {
+        const { id_conversacion } = req.params; // Obtener el id_conversacion de los parámetros de la URL
+        const userId = req.user.id_usuario; // Obtener el id del usuario logueado desde el middleware de autenticación
+        console.log("id usuario ",userId);
+        console.log("id conversacion ", id_conversacion);
+        // Consulta SQL para obtener los mensajes de la conversación
+        const query = `
+            SELECT 
+                m.id_mensaje,
+                m.contenido,
+                m.estado,
+                u_remitente.nombre AS remitente,
+                u_destinatario.nombre AS destinatario,
+                m.fecha_envio
+            FROM 
+                Mensajes m
+            JOIN 
+                Conversaciones c ON m.id_conversacion = c.id_conversacion
+            JOIN 
+                Usuarios u_remitente ON m.id_usuario_remitente = u_remitente.id_usuario
+            JOIN 
+                Usuarios u_destinatario ON c.id_usuario_destinatario = u_destinatario.id_usuario
+            WHERE 
+                c.id_conversacion = $1
+                AND (c.id_usuario_remitente = $2 OR c.id_usuario_destinatario = $3)
+            ORDER BY 
+                m.fecha_envio;
+        `;
+
+        // Ejecutar la consulta
+        const result = await connection.query(query, [id_conversacion, userId, userId]);
+
+        // Devolver los resultados
+        res.status(200).json(result.rows); // En PostgreSQL, los resultados están en result.rows
+    } catch (error) {
+        console.error("Error en el endpoint /conversaciones/:id_conversacion/mensajes:", error.message);
+        res.status(500).json({ message: "Error al obtener los mensajes de la conversación" });
+    }
+};

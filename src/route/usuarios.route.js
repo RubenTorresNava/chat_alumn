@@ -11,5 +11,5 @@ const router = express.Router(); //creamos el router
 router.post("/signup", usuariosRoute.signUp); //ruta para registrar un usuario
 router.post("/signin", usuariosRoute.signIn); //ruta para iniciar sesion
 router.get("/conversations", auth, usuariosRoute.getConversations); //ruta para obtener las conversaciones de un usuario
-/* router.get("/conversations/:id/:messages", auth, usuariosRoute.getMessages); */ //ruta para obtener una conversacion
+router.get("/conversations/:id_conversacion/:messages", auth, usuariosRoute.getMessages); //ruta para obtener una conversacion
 export default router; //exportamos el router
