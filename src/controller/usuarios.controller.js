@@ -72,19 +72,18 @@ export const signIn = async (req, res) => {
         const user = result.rows[0]; // Obtener el primer usuario encontrado
 
         // Comparar la contraseña proporcionada con el hash almacenado
-        //const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
-        /* if (!isPasswordCorrect) {
+        if (!isPasswordCorrect) {
             return res.status(401).send({ message: 'Contraseña incorrecta' });
         }
- */
+ 
         // Generar un token JWT
         const token = jwt.sign({ id_usuario: user.id_usuario }, JWT_SECRET, { expiresIn: '24h' });
 
         // Enviar la respuesta con el token
         res.status(200).send({ message: 'Sesión iniciada', token });
     } catch (error) {
-        console.error('Se ha producido un error:', error.message);
         res.status(500).send({ message: 'Se ha producido un error', error: error.message });
     }
 };
@@ -93,28 +92,27 @@ export const signIn = async (req, res) => {
 export const getConversations = async (req, res) => {
     try {
         const userID = req.user.id_usuario; // Acceder al ID del usuario autenticado
-        console.log(userID);
         // Consulta SQL para obtener las conversaciones
         const query = `
-            SELECT 
-                c.id_conversacion,
-                c.asunto,
-                u_remitente.nombre AS remitente,
-                u_destinatario.nombre AS destinatario,
-                m.nombre_materia AS materia,
-                c.fecha_creacion
-            FROM 
-                Conversaciones c
-            JOIN 
-                Usuarios u_remitente ON c.id_usuario_remitente = u_remitente.id_usuario
-            JOIN 
-                Usuarios u_destinatario ON c.id_usuario_destinatario = u_destinatario.id_usuario
-            JOIN 
-                Materias m ON c.id_materia = m.id_materia
-            WHERE 
-                c.id_usuario_remitente = $1 OR c.id_usuario_destinatario = $1
-            ORDER BY 
-                c.fecha_creacion DESC;
+        SELECT 
+            c.id_conversacion,
+            c.asunto,
+            u_remitente.nombre AS remitente,
+            u_destinatario.nombre AS destinatario,
+            m.nombre_materia AS materia,
+            c.fecha_creacion
+        FROM 
+            Conversaciones c
+        JOIN 
+            Usuarios u_remitente ON c.id_usuario_remitente = u_remitente.id_usuario
+        JOIN 
+            Usuarios u_destinatario ON c.id_usuario_destinatario = u_destinatario.id_usuario
+        LEFT JOIN  -- Usar LEFT JOIN para incluir conversaciones sin materia
+            Materias m ON c.id_materia = m.id_materia
+        WHERE 
+            c.id_usuario_remitente = $1 OR c.id_usuario_destinatario = $1
+        ORDER BY 
+            c.fecha_creacion DESC;
         `;
 
         // Ejecutar la consulta con el ID del usuario
@@ -123,7 +121,6 @@ export const getConversations = async (req, res) => {
         // Devolver las conversaciones
         res.status(200).send(result.rows);
     } catch (error) {
-        console.error("Error en getConversaciones:", error.message);
         res.status(500).send({ message: 'Error al obtener las conversaciones' });
     }
 };
@@ -133,8 +130,6 @@ export const getMessages = async (req, res) => {
     try {
         const { id_conversacion } = req.params; // Obtener el id_conversacion de los parámetros de la URL
         const userId = req.user.id_usuario; // Obtener el id del usuario logueado desde el middleware de autenticación
-        console.log("id usuario ",userId);
-        console.log("id conversacion ", id_conversacion);
         // Consulta SQL para obtener los mensajes de la conversación
         const query = `
             SELECT 
@@ -165,7 +160,6 @@ export const getMessages = async (req, res) => {
         // Devolver los resultados
         res.status(200).json(result.rows); // En PostgreSQL, los resultados están en result.rows
     } catch (error) {
-        console.error("Error en el endpoint /conversaciones/:id_conversacion/mensajes:", error.message);
         res.status(500).json({ message: "Error al obtener los mensajes de la conversación" });
     }
 };
