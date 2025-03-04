@@ -2,6 +2,7 @@ import express, { json } from 'express';
 import morgan from 'morgan';
 import corse from 'cors';
 import UseariosRoute from './route/usuarios.route.js';
+import MessageRoute from './route/mensajes.route.js';
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/usuarios', UseariosRoute);
+app.use('/api/mensajes', MessageRoute); 
 
 export default app;
